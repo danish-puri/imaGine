@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11293c" />
+    <title>imaGine — lesson studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="imaGine lesson studio home"><span class="brand-mark">i</span><span>imaGine</span><em>lesson studio</em></a>
+        <div class="lesson-name"><span class="live-dot"></span><span contenteditable="true" spellcheck="false">Photosynthesis: an introduction</span></div>
+        <div class="top-actions">
+          <button class="quiet-button" id="helpButton">? <span>Shortcuts</span></button>
+          <button class="export-button" id="exportMenuButton">Export <span aria-hidden="true">↗</span></button>
+          <div class="export-menu" id="exportMenu" hidden>
+            <button data-export="png">Download PNG</button>
+            <button data-export="pdf">Print / save as PDF</button>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <aside class="rail" aria-label="Lesson tools">
+          <button class="rail-tool active" data-tool="draw" aria-label="Draw" title="Draw (D)"><span>✎</span><small>Draw</small></button>
+          <button class="rail-tool" data-tool="laser" aria-label="Laser pointer" title="Laser pointer (L)"><span>◉</span><small>Point</small></button>
+          <button class="rail-tool" data-tool="erase" aria-label="Eraser" title="Eraser (E)"><span>⌫</span><small>Erase</small></button>
+          <div class="rail-divider"></div>
+          <button class="rail-tool" id="clearButton" aria-label="Clear annotations" title="Clear annotations"><span>⌫</span><small>Clear</small></button>
+          <button class="rail-tool" id="undoButton" aria-label="Undo last stroke" title="Undo (Ctrl Z)"><span>↶</span><small>Undo</small></button>
+        </aside>
+
+        <section class="workspace">
+          <div class="stage-wrap">
+            <div class="stage-meta"><span>PROJECTOR VIEW</span><span id="annotationCount">0 marks</span></div>
+            <div class="stage" id="stage">
+              <article class="slide slide-one" data-slide="0">
+                <div class="slide-kicker">BIOLOGY · LESSON 03</div>
+                <h1>How plants turn<br><i>light</i> into life.</h1>
+                <p class="slide-deck">Follow the energy through a leaf — from sunlight to stored sugar.</p>
+                <div class="leaf-orbit" aria-hidden="true"><span class="sun">☀</span><span class="leaf">⌁</span><span class="drop">●</span></div>
+                <div class="slide-footer"><span>01</span><span>imaGine classroom</span></div>
+              </article>
+              <article class="slide slide-two" data-slide="1" hidden>
+                <div class="slide-kicker">THE RECIPE</div>
+                <h1>Six molecules in.<br><i>One food source</i> out.</h1>
+                <div class="equation"><strong>6CO₂</strong><span>+</span><strong>6H₂O</strong><span>+ light</span><b>→</b><strong>C₆H₁₂O₆</strong><span>+</span><strong>6O₂</strong></div>
+                <p class="slide-deck">Carbon dioxide, water, and sunlight become glucose and the oxygen we breathe.</p>
+                <div class="slide-footer"><span>02</span><span>imaGine classroom</span></div>
+              </article>
+              <article class="slide slide-three" data-slide="2" hidden>
+                <div class="slide-kicker">CHECK FOR UNDERSTANDING</div>
+                <h1>Where does the<br><i>energy</i> begin?</h1>
+                <div class="question-card"><span>A</span> In the soil <span>B</span> In sunlight <span>C</span> In the air</div>
+                <div class="slide-footer"><span>03</span><span>imaGine classroom</span></div>
+              </article>
+              <canvas id="inkCanvas" aria-label="Annotation canvas. Use mouse, touch, or keyboard to add annotations."></canvas>
+              <div class="laser-dot" id="laserDot" hidden></div>
+            </div>
+            <div class="slide-nav">
+              <button id="previousButton" aria-label="Previous slide">←</button><span id="slideIndicator">1 / 3</span><button id="nextButton" aria-label="Next slide">→</button>
+            </div>
+          </div>
+
+          <aside class="control-panel">
+            <section class="panel-section input-panel">
+              <div class="panel-label"><span>INPUT</span><button id="cameraButton" class="camera-button">Start camera</button></div>
+              <div class="camera-frame" id="cameraFrame">
+                <video id="camera" autoplay muted playsinline></video>
+                <div class="camera-empty" id="cameraEmpty"><span>⌁</span><b>Camera is off</b><small>Video stays on this device</small></div>
+                <span class="privacy-pill" id="privacyPill">LOCAL ONLY</span>
+              </div>
+              <p class="input-message" id="inputMessage">Use your mouse or keyboard now. Camera gestures are an optional experimental input.</p>
+            </section>
+            <section class="panel-section">
+              <div class="panel-label"><span>GESTURE GUIDE</span><span class="status-tag">READY</span></div>
+              <div class="gesture-list">
+                <div><span class="gesture-icon">☝</span><p><b>Index point</b><small>Move pointer</small></p><kbd>P</kbd></div>
+                <div><span class="gesture-icon">✏</span><p><b>Pinch + move</b><small>Draw ink</small></p><kbd>D</kbd></div>
+                <div><span class="gesture-icon">↔</span><p><b>Open palm</b><small>Change slide</small></p><kbd>← →</kbd></div>
+              </div>
+            </section>
+            <section class="panel-section pen-panel">
+              <div class="panel-label"><span>INK</span><button id="colorButton" class="color-button" aria-label="Change ink color"><i></i><span id="colorName">Chalk blue</span></button></div>
+              <div class="thickness" role="group" aria-label="Stroke thickness"><button data-size="3" class="size active" aria-label="Fine line"></button><button data-size="7" class="size" aria-label="Medium line"></button><button data-size="13" class="size" aria-label="Bold line"></button></div>
+            </section>
+          </aside>
+        </section>
+      </main>
+      <footer><span><b>Privacy first.</b> Camera video is processed in your browser and is never uploaded.</span><span><kbd>D</kbd> draw <kbd>L</kbd> point <kbd>←</kbd><kbd>→</kbd> slides</span></footer>
+    </div>
+    <dialog id="helpDialog"><button class="dialog-close" aria-label="Close shortcuts">×</button><p class="eyebrow">KEYBOARD CONTROLS</p><h2>Present without reaching<br>for the screen.</h2><dl><dt>D</dt><dd>Draw with the pointer</dd><dt>L</dt><dd>Use the laser pointer</dd><dt>E</dt><dd>Erase marks</dd><dt>← / →</dt><dd>Move through slides</dd><dt>Ctrl / ⌘ Z</dt><dd>Undo the last mark</dd></dl></dialog>
+    <script src="app.js"></script>
+  </body>
+</html>

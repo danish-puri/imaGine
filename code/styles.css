@@ -649,22 +649,31 @@ body {
 /* Virtual Fingertip Cursor on Main Canvas */
 .air-cursor {
   position: absolute;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  border: 2px solid var(--accent-gold);
-  background: rgba(245, 166, 35, 0.3);
+  border: 1.5px solid var(--accent-gold);
+  background: rgba(18, 18, 22, 0.28);
   pointer-events: none;
   z-index: 15;
   transform: translate(-50%, -50%);
-  transition: width 0.1s, height 0.1s, background-color 0.1s;
-  box-shadow: 0 0 12px var(--accent-gold);
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.32);
+  transition: opacity 80ms ease, width 80ms ease, height 80ms ease,
+    background-color 80ms ease, box-shadow 80ms ease, visibility 0s linear 80ms;
+  will-change: left, top;
+}
+
+.air-cursor.visible {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
 }
 
 .air-cursor.drawing {
   background: var(--accent-gold);
-  width: 14px;
-  height: 14px;
-  box-shadow: 0 0 20px #fff;
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.2), 0 0 10px rgba(245, 166, 35, 0.55);
 }

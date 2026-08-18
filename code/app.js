@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function startAirDraw() {
     trackingStateEl.textContent = 'Starting camera...';
     airHud.classList.add('visible');
-    airCursor.style.display = 'block';
+    setAirCursorVisible(false);
 
     try {
       if (!handsModel) {
@@ -511,8 +511,10 @@ document.addEventListener('DOMContentLoaded', () => {
     btnAirDrawToggle.classList.remove('active');
     airDrawLabel.textContent = 'Air Draw: OFF';
     airHud.classList.remove('visible');
-    airCursor.style.display = 'none';
+    setAirCursorVisible(false);
     trackingStateEl.textContent = 'Disabled';
+    smoothX = null;
+    smoothY = null;
     stopDrawing();
 
     if (cameraInstance) {
@@ -523,6 +525,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // Mediapipe Frame Results Callback
   let lastFrameTime = performance.now();
   let frameCount = 0;
+
+  function setAirCursorVisible(isVisible) {
+    airCursor.classList.toggle('visible', isVisible);
+    if (!isVisible) {
+      airCursor.classList.remove('drawing');
+    }
+  }
+
+  function positionAirCursor(canvasX, canvasY, canvasRect) {
+    // The cursor is positioned inside the editor, while getBoundingClientRect()
+    // returns viewport coordinates. Subtract the containing block's offset so
+    // the cursor uses the exact same canvas-space point as the drawing engine.
+    const cursorContainerRect = airCursor.offsetParent.getBoundingClientRect();
+    airCursor.style.left = `${canvasRect.left - cursorContainerRect.left + canvasX}px`;
+    airCursor.style.top = `${canvasRect.top - cursorContainerRect.top + canvasY}px`;
+  }
 
   function onHandResults(results) {
     // FPS Counter
@@ -571,8 +589,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Position Virtual Fingertip Cursor
-      airCursor.style.left = `${canvasRect.left + smoothX}px`;
-      airCursor.style.top = `${canvasRect.top + smoothY}px`;
+      positionAirCursor(smoothX, smoothY, canvasRect);
+      setAirCursorVisible(true);
 
       // Pinch Gesture Detection: Calculate 3D distance between Index Tip and Thumb Tip
       const distance = Math.hypot(
@@ -605,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       trackingStateEl.textContent = 'Searching Hand...';
       trackingStateEl.style.color = '#ff9500';
-      airCursor.style.display = 'none';
+      setAirCursorVisible(false);
 
       if (isAirDrawing) {
         isAirDrawing = false;
