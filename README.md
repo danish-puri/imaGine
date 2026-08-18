@@ -1,69 +1,67 @@
 # imaGine
 
-imaGine is a browser based presentation and annotation tool by Danish Puri. It helps teachers and presenters control a lesson, explain ideas with natural hand movement, and export a clear record of the session.
+imaGine is a browser based air notes and drawing tool by Danish Puri. It helps people capture ideas with natural hand movement and export a clear record of the session.
 
 ## The opportunity
 
 Presenters often need to move between the screen, a mouse, and a whiteboard while they teach. That movement interrupts attention and makes useful annotations difficult to keep.
 
-imaGine brings presentation control and annotation into one calm workspace. A presenter can use a webcam tracked hand, a mouse, touch, or a keyboard. The result is a more direct way to explain an idea and a simple way to save it.
+imaGine brings drawing and annotation into one calm workspace. A person can use a webcam tracked hand, a mouse, touch, or a keyboard. The result is a more direct way to express an idea and a simple way to save it.
 
 ## Who it is for
 
-1. Teachers leading lessons in a classroom
+1. Teachers preparing visual notes
 2. Presenters explaining ideas to a group
 3. Students and teams that need to capture visual notes
 4. Anyone who wants to draw without a physical pen or paper
 
 ## Current product
 
-The classroom studio in `v2/v2/index.html` provides:
+The air notes workspace in `code/index.html` provides:
 
-1. A sample lesson with three presentation slides
-2. Drawing, erasing, undo, and clear controls
-3. A laser pointer for directing attention
-4. Keyboard controls for slide navigation and tools
+1. A digital canvas for notes and sketches
+2. Pen, highlighter, and eraser tools
+3. Undo, redo, and clear controls
+4. Webcam tracked fingertip drawing in the air
 5. Mouse and touch input as reliable fallbacks
-6. Optional local webcam access for future gesture input
-7. PNG export and browser printing for PDF output
+6. PNG and PDF export
 
-The earlier air drawing experience in `code/index.html` explores fingertip tracking and air drawing on a digital canvas.
+The workspace keeps camera processing in the browser and maps hand movement to marks on the canvas.
 
 ## How it works
 
-1. Open the lesson studio in a browser
-2. Select a tool with the rail or keyboard shortcuts
-3. Present the lesson and add annotations as you speak
-4. Export the annotated view as a PNG or PDF
+1. Open the air notes workspace in a browser
+2. Select a drawing tool
+3. Turn on Air Draw when you want to use a webcam tracked fingertip
+4. Add notes, sketches, or annotations
+5. Export the result as a PNG or PDF
 
-Camera video is processed in the browser. It is not uploaded. If camera access is unavailable, the main presentation workflow remains available through mouse, touch, and keyboard input.
+Camera video is processed in the browser. It is not uploaded. If camera access is unavailable, the drawing workflow remains available through mouse and touch input.
 
 ## Quick start
 
 From the project folder, start a local web server on port 8000. Any simple static server will work. Then open:
 
-    http://localhost:8000/v2/v2/
+    http://localhost:8000/code/
 
-Useful controls:
+Useful controls include:
 
-1. Press `D` to draw
-2. Press `L` to use the laser pointer
-3. Press `E` to erase
-4. Press the left or right arrow key to change slides
-5. Use the export menu to save a PNG or print to PDF
+1. Use the Air Draw button to start or stop webcam input
+2. Choose the pen, highlighter, or eraser tool
+3. Use undo, redo, and clear to manage the canvas
+4. Use the PNG or PDF export controls to save your work
 
 Camera access usually requires a secure browser context. Localhost is supported by modern browsers.
 
 ## Project layout
 
-1. `v2/v2/` contains the classroom presentation studio
-2. `code/` contains the original air drawing experience
-3. `design/` contains product design notes
-4. `motivation/` contains the original project motivation
+1. `code/` contains the air notes workspace
+2. `design/` contains product design notes
+3. `motivation/` contains the original project motivation
 
 ## Product status
 
-imaGine is an early working MVP. The classroom workflow, annotation tools, export paths, and input fallbacks are in place. Gesture recognition is an experimental input layer and remains modular while it is tested on real devices.
+imaGine is an early working MVP. The drawing workflow, annotation tools, export paths, and input fallbacks are in place. Gesture recognition remains an experimental input layer while it is tested on real devices.
 
 ## Privacy and responsible use
 

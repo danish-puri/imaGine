@@ -1,1 +1,0 @@
-Turn imaGine v2 discovery and pilots into consented, privacy-safe, structured evidence about teachers, buyers, IT stakeholders, workflows, environments, accessibility, procurement, objections, and outcomes by demonstrating only the real setup-to-export MVP, labeling pricing and packaging as hypotheses, avoiding unbuilt promises, and routing findings to the responsible workstream.
