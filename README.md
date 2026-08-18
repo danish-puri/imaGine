@@ -72,4 +72,4 @@ The project is designed around local processing. Presenters should still review 
 
 ## Author
 
-Danish Puri is the sole author of imaGine.
+Danish Puri 
