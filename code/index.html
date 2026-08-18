@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imagine - Air Notes & Air Drawing Web App</title>
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- MediaPipe Libraries via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+  <!-- jsPDF for PDF Exports -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Apple Notes Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand-title">
+          <div class="brand-icon">✨</div>
+          <span>Imagine</span>
+        </div>
+      </div>
+
+      <nav>
+        <div class="nav-section-title">Folders</div>
+        <ul class="nav-list">
+          <li class="nav-item active" data-folder="all">
+            <div class="nav-item-left">
+              <i data-lucide="folder"></i>
+              <span>All Notes</span>
+            </div>
+            <span class="badge" id="countAll">0</span>
+          </li>
+          <li class="nav-item" data-folder="air">
+            <div class="nav-item-left">
+              <i data-lucide="sparkles"></i>
+              <span>Air Sketches</span>
+            </div>
+            <span class="badge" id="countAir">0</span>
+          </li>
+          <li class="nav-item" data-folder="quick">
+            <div class="nav-item-left">
+              <i data-lucide="file-text"></i>
+              <span>Quick Notes</span>
+            </div>
+            <span class="badge" id="countQuick">0</span>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Notes List Column -->
+    <section class="notes-panel">
+      <div class="notes-header">
+        <div class="notes-header-top">
+          <h2 class="notes-title">Notes</h2>
+          <button class="btn-new-note" id="btnNewNote" title="New Air Note">+</button>
+        </div>
+        <div class="search-box">
+          <i data-lucide="search" class="search-icon"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search notes...">
+        </div>
+      </div>
+
+      <div class="notes-list" id="notesList">
+        <!-- Rendered Note Items -->
+      </div>
+    </section>
+
+    <!-- Main Editor & Air Drawing Canvas Area -->
+    <main class="workspace">
+      
+      <!-- Top Action Toolbar -->
+      <header class="toolbar">
+        <div class="toolbar-left">
+          <input type="text" id="noteTitleInput" class="title-input" value="Air Sketch #1">
+        </div>
+
+        <div class="toolbar-center">
+          <!-- Air Draw Cam Toggle -->
+          <button class="btn-air-draw" id="btnAirDrawToggle">
+            <div class="status-pulse" id="airPulse"></div>
+            <i data-lucide="camera"></i>
+            <span id="airDrawLabel">Air Draw: OFF</span>
+          </button>
+
+          <!-- Drawing Tool Palette -->
+          <div class="tool-palette">
+            <button class="tool-btn active" data-tool="pen" title="Pen Tool">
+              <i data-lucide="pen-tool"></i>
+            </button>
+            <button class="tool-btn" data-tool="highlighter" title="Highlighter">
+              <i data-lucide="highlighter"></i>
+            </button>
+            <button class="tool-btn" data-tool="eraser" title="Eraser">
+              <i data-lucide="eraser"></i>
+            </button>
+            
+            <div class="color-picker-wrapper">
+              <input type="color" id="brushColor" class="color-picker" value="#f5a623">
+            </div>
+
+            <div style="display: flex; align-items: center; padding: 0 6px;">
+              <input type="range" id="brushSize" min="2" max="36" value="5" style="width: 60px; accent-color: var(--accent-gold);">
+            </div>
+          </div>
+        </div>
+
+        <div class="toolbar-right">
+          <button class="btn-action" id="btnUndo" title="Undo Stroke">
+            <i data-lucide="undo-2"></i>
+          </button>
+          <button class="btn-action" id="btnRedo" title="Redo Stroke">
+            <i data-lucide="redo-2"></i>
+          </button>
+          <button class="btn-action" id="btnClearCanvas" title="Clear Air Canvas">
+            <i data-lucide="trash-2"></i> Clear
+          </button>
+          
+          <button class="btn-action" id="btnExportPNG" title="Export as PNG Image">
+            <i data-lucide="image"></i> PNG
+          </button>
+          <button class="btn-action btn-export" id="btnExportPDF" title="Export as PDF Document">
+            <i data-lucide="file-down"></i> Export PDF
+          </button>
+        </div>
+      </header>
+
+      <!-- Drawing Canvas Area -->
+      <div class="editor-body">
+        
+        <div class="canvas-wrapper">
+          <canvas id="sketchCanvas"></canvas>
+        </div>
+
+        <!-- Virtual Fingertip Air Drawing Cursor -->
+        <div class="air-cursor" id="airCursor"></div>
+
+        <!-- Air Drawing Webcam Camera HUD Modal -->
+        <div class="air-hud" id="airHud">
+          <div class="hud-header">
+            <span class="hud-title">
+              <i data-lucide="video"></i> Hand Tracker
+            </span>
+            <button class="hud-close" id="btnHudClose">&times;</button>
+          </div>
+
+          <div class="video-container">
+            <video id="webcamVideo" autoplay playsinline muted></video>
+            <canvas id="trackingCanvas"></canvas>
+          </div>
+
+          <div class="hud-status">
+            <span>Tracking State: <strong id="trackingState">Initializing...</strong></span>
+            <span id="fpsCounter">30 FPS</span>
+          </div>
+
+          <div class="gesture-guide">
+            <strong>🖐️ Air Gestures:</strong><br>
+            • <strong>Index Finger Extended:</strong> Move pen in air<br>
+            • <strong>Pinch Index & Thumb (or Hold):</strong> Draw stroke<br>
+            • <strong>Release Pinch:</strong> Lift pen
+          </div>
+        </div>
+
+        <!-- Floating Text Note Area for Hybrid Note-Taking -->
+        <div class="text-editor-container">
+          <div class="text-editor-header">
+            <span>Text Note Overlay</span>
+            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+          </div>
+          <textarea id="textEditor" class="text-editor" placeholder="Type your ideas, thoughts, or transcribed text here..."></textarea>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
