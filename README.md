@@ -17,7 +17,7 @@ imaGine brings drawing and annotation into one calm workspace. A person can use 
 
 ## Current product
 
-The air notes workspace in `code/index.html` provides:
+The air notes workspace in `index.html` provides:
 
 1. A digital canvas for notes and sketches
 2. Pen, highlighter, and eraser tools
@@ -30,7 +30,7 @@ The workspace keeps camera processing in the browser and maps hand movement to m
 
 ## How it works
 
-1. Open the air notes workspace in a browser
+1. Open `index.html` in a browser
 2. Select a drawing tool
 3. Turn on Air Draw when you want to use a webcam tracked fingertip
 4. Add notes, sketches, or annotations
@@ -42,7 +42,7 @@ Camera video is processed in the browser. It is not uploaded. If camera access i
 
 From the project folder, start a local web server on port 8000. Any simple static server will work. Then open:
 
-    http://localhost:8000/code/
+    http://localhost:8000/
 
 Useful controls include:
 
@@ -53,11 +53,14 @@ Useful controls include:
 
 Camera access usually requires a secure browser context. Localhost is supported by modern browsers.
 
-## Project layout
+## Public files
 
-1. `code/` contains the air notes workspace
-2. `design/` contains product design notes
-3. `motivation/` contains the original project motivation
+The public repository intentionally contains only the files needed to run and understand the product:
+
+1. `index.html` contains the interface
+2. `style.css` contains the visual design
+3. `app.js` contains the application behavior
+4. `README.md` explains the product and how to use it
 
 ## Product status
 
