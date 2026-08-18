@@ -77,4 +77,4 @@ imaGine is an early working MVP. The core drawing, text note, export, and fallba
 
 ## Author
 
-Danish Puri is the sole author of imaGine.
+Danish Puri 
