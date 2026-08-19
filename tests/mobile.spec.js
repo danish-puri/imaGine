@@ -59,30 +59,32 @@ test.describe('mobile layout', () => {
     await openApp(page);
   });
 
-  test('stacks the app without page-level horizontal overflow', async ({ page }) => {
+  test('keeps the canvas primary without page-level horizontal overflow', async ({ page }) => {
     const layout = await page.evaluate(() => {
       const sidebar = document.querySelector('.sidebar').getBoundingClientRect();
-      const notes = document.querySelector('.notes-panel').getBoundingClientRect();
       const workspace = document.querySelector('.workspace').getBoundingClientRect();
+      const dock = document.querySelector('.toolbar-controls').getBoundingClientRect();
       const canvas = document.querySelector('#sketchCanvas');
 
       return {
         viewportWidth: window.innerWidth,
+        viewportHeight: window.innerHeight,
         bodyScrollWidth: document.body.scrollWidth,
-        appColumns: getComputedStyle(document.querySelector('.app-container')).gridTemplateColumns,
         canvasTouchAction: getComputedStyle(canvas).touchAction,
+        sidebarHeight: sidebar.height,
         sidebarBottom: sidebar.bottom,
-        notesTop: notes.top,
-        notesBottom: notes.bottom,
-        workspaceTop: workspace.top
+        workspaceTop: workspace.top,
+        workspaceBottom: workspace.bottom,
+        dockBottom: dock.bottom
       };
     });
 
     expect(layout.bodyScrollWidth).toBeLessThanOrEqual(layout.viewportWidth);
-    expect(layout.appColumns.split(' ')).toHaveLength(1);
     expect(layout.canvasTouchAction).toBe('none');
-    expect(Math.abs(layout.sidebarBottom - layout.notesTop)).toBeLessThanOrEqual(1);
-    expect(Math.abs(layout.notesBottom - layout.workspaceTop)).toBeLessThanOrEqual(1);
+    expect(layout.sidebarHeight).toBe(56);
+    expect(Math.abs(layout.sidebarBottom - layout.workspaceTop)).toBeLessThanOrEqual(1);
+    expect(layout.workspaceBottom).toBeLessThanOrEqual(layout.viewportHeight);
+    expect(layout.dockBottom).toBeLessThanOrEqual(layout.viewportHeight);
 
     for (const selector of [
       '#btnAirDrawToggle',
@@ -91,15 +93,21 @@ test.describe('mobile layout', () => {
       '[data-tool="eraser"]',
       '#btnUndo',
       '#btnRedo',
-      '#btnClearCanvas',
-      '#btnExportPNG',
-      '#btnExportPDF'
+      '#btnMobileMore',
+      '#btnMobileNotes',
+      '#btnTextEditorToggle'
     ]) {
       await expect(page.locator(selector)).toBeVisible();
     }
+
+    await expect(page.locator('#notesPanel')).toBeHidden();
+    await page.locator('#btnMobileNotes').click();
+    await expect(page.locator('#notesPanel')).toBeVisible();
+    await expect(page.locator('#btnNotesClose')).toBeVisible();
   });
 
   test('keeps floating editors inside the viewport', async ({ page }) => {
+    await page.locator('#btnTextEditorToggle').click();
     const bounds = await page.locator('.text-editor-container').boundingBox();
 
     expect(bounds).not.toBeNull();
@@ -120,20 +128,22 @@ test.describe('compact mobile layout', () => {
 
   test('uses icon-first compact controls at 360px', async ({ page }) => {
     const compactStyles = await page.evaluate(() => ({
-      airLabelFontSize: getComputedStyle(document.querySelector('#airDrawLabel')).fontSize,
-      exportFontSize: getComputedStyle(document.querySelector('#btnExportPDF')).fontSize,
-      clearFontSize: getComputedStyle(document.querySelector('#btnClearCanvas')).fontSize,
-      folderLabelDisplay: getComputedStyle(document.querySelector('.nav-item-left span')).display,
+      airLabelWidth: getComputedStyle(document.querySelector('#airDrawLabel')).width,
+      notesLabelWidth: getComputedStyle(document.querySelector('.mobile-notes-trigger > span:not(.mobile-note-count)')).width,
+      navDisplay: getComputedStyle(document.querySelector('.sidebar nav')).display,
+      dockWidth: document.querySelector('.toolbar-controls').getBoundingClientRect().width,
       bodyScrollWidth: document.body.scrollWidth,
       viewportWidth: window.innerWidth
     }));
 
-    expect(compactStyles.airLabelFontSize).toBe('0px');
-    expect(compactStyles.exportFontSize).toBe('0px');
-    expect(compactStyles.clearFontSize).not.toBe('0px');
-    expect(compactStyles.folderLabelDisplay).toBe('none');
+    expect(compactStyles.airLabelWidth).toBe('1px');
+    expect(compactStyles.notesLabelWidth).toBe('1px');
+    expect(compactStyles.navDisplay).toBe('none');
+    expect(compactStyles.dockWidth).toBeLessThanOrEqual(compactStyles.viewportWidth - 16);
     expect(compactStyles.bodyScrollWidth).toBeLessThanOrEqual(compactStyles.viewportWidth);
-    await expect(page.locator('#btnExportPDF [data-lucide="file-down"]')).toBeAttached();
+
+    await page.locator('#btnMobileMore').click();
+    await expect(page.locator('#btnExportPDF')).toBeVisible();
     await expect(page.locator('#btnExportPDF')).toHaveAccessibleName('Export PDF');
   });
 });
@@ -177,12 +187,16 @@ test.describe('mobile interactions', () => {
 
   test('saves and restores note text from the mobile editor', async ({ page }) => {
     await page.locator('#noteTitleInput').fill('Mobile geometry sketch');
+    await page.locator('#btnTextEditorToggle').click();
     await page.locator('#textEditor').fill('Triangle proof captured on a phone.');
+
+    await page.locator('#btnMobileNotes').click();
     await page.locator('#btnNewNote').click();
 
     await expect(page.locator('#countAll')).toHaveText('2');
     await expect(page.locator('#noteTitleInput')).toHaveValue('New Air Sketch');
 
+    await page.locator('#btnMobileNotes').click();
     await page.getByText('Mobile geometry sketch', { exact: true }).click();
 
     await expect(page.locator('#noteTitleInput')).toHaveValue('Mobile geometry sketch');
@@ -192,6 +206,7 @@ test.describe('mobile interactions', () => {
   test('downloads a PNG with the note title', async ({ page }) => {
     await page.locator('#noteTitleInput').fill('Mobile sketch');
 
+    await page.locator('#btnMobileMore').click();
     const downloadPromise = page.waitForEvent('download');
     await page.locator('#btnExportPNG').click();
     const download = await downloadPromise;

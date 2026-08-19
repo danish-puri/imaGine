@@ -39,6 +39,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const noteTitleInput = document.getElementById('noteTitleInput');
   const textEditor = document.getElementById('textEditor');
+  const notesPanel = document.getElementById('notesPanel');
+  const btnMobileNotes = document.getElementById('btnMobileNotes');
+  const btnNotesClose = document.getElementById('btnNotesClose');
+  const mobileNotesScrim = document.getElementById('mobileNotesScrim');
+  const mobileNoteCount = document.getElementById('mobileNoteCount');
+  const textEditorContainer = document.querySelector('.text-editor-container');
+  const btnTextEditorToggle = document.getElementById('btnTextEditorToggle');
+  const btnMobileMore = document.getElementById('btnMobileMore');
+  const mobileActionsMenu = document.getElementById('mobileActionsMenu');
+  const mobileLayoutQuery = window.matchMedia('(max-width: 800px)');
 
   const sketchCanvas = document.getElementById('sketchCanvas');
   const ctx = sketchCanvas.getContext('2d');
@@ -66,6 +76,85 @@ document.addEventListener('DOMContentLoaded', () => {
   const countAll = document.getElementById('countAll');
   const countAir = document.getElementById('countAir');
   const countQuick = document.getElementById('countQuick');
+
+  // --- MOBILE SURFACE CONTROLS ---
+  function setMobileNotesOpen(isOpen) {
+    const shouldOpen = mobileLayoutQuery.matches && isOpen;
+    if (shouldOpen) setMobileActionsOpen(false);
+    notesPanel.classList.toggle('open', shouldOpen);
+    document.body.classList.toggle('mobile-notes-open', shouldOpen);
+    btnMobileNotes.setAttribute('aria-expanded', String(shouldOpen));
+
+    if (mobileLayoutQuery.matches) {
+      notesPanel.setAttribute('aria-hidden', String(!shouldOpen));
+    } else {
+      notesPanel.removeAttribute('aria-hidden');
+    }
+  }
+
+  function setMobileActionsOpen(isOpen) {
+    const shouldOpen = mobileLayoutQuery.matches && isOpen;
+    mobileActionsMenu.classList.toggle('open', shouldOpen);
+    btnMobileMore.setAttribute('aria-expanded', String(shouldOpen));
+  }
+
+  function setTextEditorExpanded(isExpanded) {
+    const shouldExpand = !mobileLayoutQuery.matches || isExpanded;
+    if (mobileLayoutQuery.matches && isExpanded) setMobileActionsOpen(false);
+    textEditorContainer.classList.toggle('expanded', mobileLayoutQuery.matches && isExpanded);
+    btnTextEditorToggle.setAttribute('aria-expanded', String(shouldExpand));
+  }
+
+  function syncResponsiveSurfaces() {
+    setMobileNotesOpen(false);
+    setMobileActionsOpen(false);
+    setTextEditorExpanded(false);
+  }
+
+  btnMobileNotes.addEventListener('click', () => {
+    setMobileNotesOpen(!notesPanel.classList.contains('open'));
+  });
+
+  btnNotesClose.addEventListener('click', () => setMobileNotesOpen(false));
+  mobileNotesScrim.addEventListener('click', () => setMobileNotesOpen(false));
+
+  btnMobileMore.addEventListener('click', () => {
+    setMobileActionsOpen(!mobileActionsMenu.classList.contains('open'));
+  });
+
+  mobileActionsMenu.addEventListener('click', (event) => {
+    if (event.target.closest('.btn-action')) setMobileActionsOpen(false);
+  });
+
+  btnTextEditorToggle.addEventListener('click', () => {
+    if (!mobileLayoutQuery.matches) return;
+    setTextEditorExpanded(!textEditorContainer.classList.contains('expanded'));
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      if (mobileActionsMenu.classList.contains('open')) {
+        setMobileActionsOpen(false);
+        btnMobileMore.focus();
+      } else if (notesPanel.classList.contains('open')) {
+        setMobileNotesOpen(false);
+        btnMobileNotes.focus();
+      }
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (
+      mobileActionsMenu.classList.contains('open') &&
+      !mobileActionsMenu.contains(event.target) &&
+      !btnMobileMore.contains(event.target)
+    ) {
+      setMobileActionsOpen(false);
+    }
+  });
+
+  mobileLayoutQuery.addEventListener('change', syncResponsiveSurfaces);
+  syncResponsiveSurfaces();
 
   // --- CANVAS INITIALIZATION & RESIZING ---
   function resizeCanvas() {
@@ -132,6 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     countAll.textContent = notes.length;
     countAir.textContent = notes.filter(n => n.folder === 'air').length;
     countQuick.textContent = notes.filter(n => n.folder === 'quick').length;
+    mobileNoteCount.textContent = notes.length;
   }
 
   function renderNotesList(filterQuery = '') {
@@ -166,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
         currentNoteId = note.id;
         renderNotesList(searchInput.value);
         loadNote(currentNoteId);
+        setMobileNotesOpen(false);
       });
 
       notesListEl.appendChild(card);
@@ -227,6 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
     saveNotesToStorage();
     renderNotesList(searchInput.value);
     loadNote(currentNoteId);
+    setMobileNotesOpen(false);
   });
 
   noteTitleInput.addEventListener('input', () => saveCurrentNoteState());
@@ -497,6 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isAirDrawActive = true;
       btnAirDrawToggle.classList.add('active');
       airDrawLabel.textContent = 'Air Draw: ON';
+      btnAirDrawToggle.setAttribute('aria-label', 'Turn off Air Draw');
       trackingStateEl.textContent = 'Hand Search...';
 
     } catch (err) {
@@ -510,6 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isAirDrawActive = false;
     btnAirDrawToggle.classList.remove('active');
     airDrawLabel.textContent = 'Air Draw: OFF';
+    btnAirDrawToggle.setAttribute('aria-label', 'Turn on Air Draw');
     airHud.classList.remove('visible');
     setAirCursorVisible(false);
     trackingStateEl.textContent = 'Disabled';

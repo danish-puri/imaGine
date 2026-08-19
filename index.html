@@ -27,6 +27,11 @@
           <div class="brand-icon">✨</div>
           <span>Imagine</span>
         </div>
+        <button class="mobile-notes-trigger" id="btnMobileNotes" type="button" aria-controls="notesPanel" aria-expanded="false">
+          <i data-lucide="notebook-tabs"></i>
+          <span>Notes</span>
+          <span class="mobile-note-count" id="mobileNoteCount">0</span>
+        </button>
       </div>
 
       <nav>
@@ -58,11 +63,16 @@
     </aside>
 
     <!-- Notes List Column -->
-    <section class="notes-panel">
+    <section class="notes-panel" id="notesPanel" aria-label="Notes">
       <div class="notes-header">
         <div class="notes-header-top">
           <h2 class="notes-title">Notes</h2>
-          <button class="btn-new-note" id="btnNewNote" title="New Air Note">+</button>
+          <div class="notes-header-actions">
+            <button class="notes-close" id="btnNotesClose" type="button" aria-label="Close notes">
+              <i data-lucide="x"></i>
+            </button>
+            <button class="btn-new-note" id="btnNewNote" title="New Air Note" aria-label="New air note">+</button>
+          </div>
         </div>
         <div class="search-box">
           <i data-lucide="search" class="search-icon"></i>
@@ -75,62 +85,74 @@
       </div>
     </section>
 
+    <button class="mobile-notes-scrim" id="mobileNotesScrim" type="button" aria-label="Close notes"></button>
+
     <!-- Main Editor & Air Drawing Canvas Area -->
     <main class="workspace">
       
       <!-- Top Action Toolbar -->
       <header class="toolbar">
         <div class="toolbar-left">
-          <input type="text" id="noteTitleInput" class="title-input" value="Air Sketch #1">
+          <input type="text" id="noteTitleInput" class="title-input" value="Air Sketch #1" aria-label="Note title">
         </div>
 
-        <div class="toolbar-center">
-          <!-- Air Draw Cam Toggle -->
-          <button class="btn-air-draw" id="btnAirDrawToggle">
-            <div class="status-pulse" id="airPulse"></div>
-            <i data-lucide="camera"></i>
-            <span id="airDrawLabel">Air Draw: OFF</span>
-          </button>
+        <div class="toolbar-controls" aria-label="Drawing controls">
+          <div class="toolbar-center">
+            <!-- Air Draw Cam Toggle -->
+            <button class="btn-air-draw" id="btnAirDrawToggle" aria-label="Turn on Air Draw">
+              <div class="status-pulse" id="airPulse"></div>
+              <i data-lucide="camera"></i>
+              <span id="airDrawLabel">Air Draw: OFF</span>
+            </button>
 
-          <!-- Drawing Tool Palette -->
-          <div class="tool-palette">
-            <button class="tool-btn active" data-tool="pen" title="Pen Tool">
-              <i data-lucide="pen-tool"></i>
-            </button>
-            <button class="tool-btn" data-tool="highlighter" title="Highlighter">
-              <i data-lucide="highlighter"></i>
-            </button>
-            <button class="tool-btn" data-tool="eraser" title="Eraser">
-              <i data-lucide="eraser"></i>
-            </button>
-            
-            <div class="color-picker-wrapper">
-              <input type="color" id="brushColor" class="color-picker" value="#f5a623">
-            </div>
+            <!-- Drawing Tool Palette -->
+            <div class="tool-palette">
+              <button class="tool-btn active" data-tool="pen" title="Pen Tool" aria-label="Pen tool">
+                <i data-lucide="pen-tool"></i>
+              </button>
+              <button class="tool-btn" data-tool="highlighter" title="Highlighter" aria-label="Highlighter">
+                <i data-lucide="highlighter"></i>
+              </button>
+              <button class="tool-btn" data-tool="eraser" title="Eraser" aria-label="Eraser">
+                <i data-lucide="eraser"></i>
+              </button>
 
-            <div style="display: flex; align-items: center; padding: 0 6px;">
-              <input type="range" id="brushSize" min="2" max="36" value="5" style="width: 60px; accent-color: var(--accent-gold);">
+              <div class="color-picker-wrapper">
+                <input type="color" id="brushColor" class="color-picker" value="#f5a623" aria-label="Brush color">
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="toolbar-right">
-          <button class="btn-action" id="btnUndo" title="Undo Stroke">
-            <i data-lucide="undo-2"></i>
-          </button>
-          <button class="btn-action" id="btnRedo" title="Redo Stroke">
-            <i data-lucide="redo-2"></i>
-          </button>
-          <button class="btn-action" id="btnClearCanvas" title="Clear Air Canvas">
-            <i data-lucide="trash-2"></i> Clear
-          </button>
-          
-          <button class="btn-action" id="btnExportPNG" title="Export as PNG Image">
-            <i data-lucide="image"></i> PNG
-          </button>
-          <button class="btn-action btn-export" id="btnExportPDF" title="Export as PDF Document">
-            <i data-lucide="file-down"></i> Export PDF
-          </button>
+          <div class="toolbar-right">
+            <div class="history-actions">
+              <button class="btn-action" id="btnUndo" title="Undo Stroke" aria-label="Undo stroke">
+                <i data-lucide="undo-2"></i>
+              </button>
+              <button class="btn-action" id="btnRedo" title="Redo Stroke" aria-label="Redo stroke">
+                <i data-lucide="redo-2"></i>
+              </button>
+            </div>
+
+            <button class="mobile-more-trigger" id="btnMobileMore" type="button" aria-controls="mobileActionsMenu" aria-expanded="false" aria-label="More drawing actions">
+              <i data-lucide="ellipsis"></i>
+            </button>
+
+            <div class="mobile-actions-menu" id="mobileActionsMenu">
+              <label class="brush-size-control" for="brushSize">
+                <span class="brush-size-label">Brush size</span>
+                <input type="range" id="brushSize" min="2" max="36" value="5" aria-label="Brush size">
+              </label>
+              <button class="btn-action" id="btnClearCanvas" title="Clear Air Canvas" aria-label="Clear canvas">
+                <i data-lucide="trash-2"></i><span>Clear</span>
+              </button>
+              <button class="btn-action" id="btnExportPNG" title="Export as PNG Image" aria-label="Export PNG">
+                <i data-lucide="image"></i><span>Export PNG</span>
+              </button>
+              <button class="btn-action btn-export" id="btnExportPDF" title="Export as PDF Document" aria-label="Export PDF">
+                <i data-lucide="file-down"></i><span>Export PDF</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -173,10 +195,10 @@
 
         <!-- Floating Text Note Area for Hybrid Note-Taking -->
         <div class="text-editor-container">
-          <div class="text-editor-header">
-            <span>Text Note Overlay</span>
-            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
-          </div>
+          <button class="text-editor-header" id="btnTextEditorToggle" type="button" aria-controls="textEditor" aria-expanded="true">
+            <span class="text-editor-heading"><i data-lucide="edit-3"></i> Text note</span>
+            <i class="text-editor-chevron" data-lucide="chevron-up"></i>
+          </button>
           <textarea id="textEditor" class="text-editor" placeholder="Type your ideas, thoughts, or transcribed text here..."></textarea>
         </div>
 
