@@ -52,6 +52,19 @@ The page loads the hand tracking and PDF libraries from public content delivery 
 
 Camera access usually requires a secure browser context. Localhost is supported by modern browsers. If camera access is unavailable, drawing, typing, export, undo, redo, and clear still work with local input.
 
+## Run the mobile tests
+
+Install the test dependency and Chromium once:
+
+    npm install
+    npx playwright install chromium
+
+Run the automated mobile layout and touch-input suite:
+
+    npm run test:mobile
+
+Use `npm run test:mobile:headed` to watch the tests in a browser window.
+
 ## Privacy
 
 Camera frames are processed in the browser and are not uploaded by imaGine. The note stays in the current browser session unless you choose to export it. Review browser camera permissions before presenting, especially on a shared computer.
