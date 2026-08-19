@@ -309,6 +309,18 @@ body {
   overflow: hidden;
 }
 
+.site-copyright {
+  position: absolute;
+  right: 20px;
+  bottom: 14px;
+  z-index: 3;
+  color: var(--text-tertiary);
+  font-size: 0.68rem;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  opacity: 0.82;
+}
+
 /* Main Toolbar */
 .toolbar {
   height: 60px;
@@ -943,6 +955,12 @@ body {
     height: calc(100vh - 56px);
     height: calc(100dvh - 56px);
     min-height: 0;
+  }
+
+  .site-copyright {
+    right: 12px;
+    bottom: calc(74px + env(safe-area-inset-bottom));
+    font-size: 0.62rem;
   }
 
   .toolbar {
