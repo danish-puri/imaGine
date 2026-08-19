@@ -496,6 +496,7 @@ body {
   display: block;
   cursor: crosshair;
   background-color: transparent;
+  touch-action: none;
 }
 
 /* Text Overlay (Hybrid Note + Canvas) */
@@ -676,4 +677,259 @@ body {
   width: 10px;
   height: 10px;
   box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.2), 0 0 10px rgba(245, 166, 35, 0.55);
+}
+
+/* Responsive layout
+   The desktop composition stays intact; smaller screens stack the same
+   surfaces so every existing control remains available without horizontal
+   page overflow. */
+@media (max-width: 1100px) {
+  .app-container {
+    grid-template-columns: 190px 260px minmax(0, 1fr);
+  }
+
+  .toolbar {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .toolbar-left,
+  .toolbar-center,
+  .toolbar-right {
+    gap: 8px;
+  }
+
+  .toolbar-center {
+    min-width: 0;
+  }
+
+  .tool-palette {
+    gap: 2px;
+  }
+
+  .btn-action {
+    padding-inline: 9px;
+  }
+}
+
+@media (max-width: 800px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 190px minmax(0, 1fr);
+    min-height: 100vh;
+    height: auto;
+    min-width: 0;
+  }
+
+  .sidebar {
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 10px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .sidebar-header {
+    padding: 2px 4px;
+  }
+
+  .sidebar nav {
+    min-width: 0;
+  }
+
+  .nav-section-title {
+    display: none;
+  }
+
+  .nav-list {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+
+  .nav-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nav-item {
+    flex: 0 0 auto;
+    min-height: 38px;
+    padding: 8px 10px;
+  }
+
+  .notes-panel {
+    min-height: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .notes-header {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .notes-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px 12px 12px;
+  }
+
+  .note-card {
+    flex: 0 0 230px;
+    min-width: 0;
+  }
+
+  .workspace {
+    min-height: 680px;
+    height: calc(100vh - 250px);
+  }
+
+  .toolbar {
+    height: auto;
+    min-height: 60px;
+    flex-wrap: wrap;
+    padding: 8px 12px;
+    align-content: center;
+  }
+
+  .toolbar-left {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .title-input {
+    width: 100%;
+    min-width: 0;
+    font-size: 1.1rem;
+  }
+
+  .toolbar-center,
+  .toolbar-right {
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .toolbar-center::-webkit-scrollbar,
+  .toolbar-right::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toolbar-center {
+    flex: 1 1 auto;
+  }
+
+  .toolbar-right {
+    flex: 0 1 auto;
+  }
+
+  .btn-air-draw,
+  .btn-action,
+  .tool-btn {
+    min-height: 38px;
+  }
+
+  .text-editor-container {
+    right: 12px;
+    bottom: 12px;
+    width: min(360px, calc(100% - 24px));
+  }
+
+  .air-hud {
+    top: 12px;
+    right: 12px;
+    width: min(280px, calc(100% - 24px));
+  }
+}
+
+@media (max-width: 520px) {
+  .app-container {
+    grid-template-rows: auto 170px minmax(0, 1fr);
+  }
+
+  .brand-title {
+    font-size: 1rem;
+  }
+
+  .toolbar {
+    align-items: stretch;
+  }
+
+  .toolbar-center,
+  .toolbar-right {
+    flex-basis: 100%;
+  }
+
+  .toolbar-center {
+    justify-content: space-between;
+  }
+
+  .toolbar-right {
+    justify-content: flex-end;
+  }
+
+  .tool-palette {
+    flex: 0 0 auto;
+  }
+
+  .workspace {
+    height: calc(100vh - 220px);
+    min-height: 620px;
+  }
+
+  .text-editor-container {
+    bottom: 10px;
+    padding: 12px;
+  }
+
+  .text-editor {
+    height: 100px;
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-item-left span {
+    display: none;
+  }
+
+  .nav-item {
+    padding-inline: 12px;
+  }
+
+  .btn-air-draw {
+    padding-inline: 10px;
+  }
+
+  .btn-air-draw span,
+  .btn-action:not(#btnClearCanvas) {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .btn-action:not(#btnClearCanvas) svg,
+  .btn-air-draw svg {
+    margin: 0;
+  }
+
+  .btn-clear-canvas {
+    padding-inline: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
