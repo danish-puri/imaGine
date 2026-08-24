@@ -1,6 +1,6 @@
 # imaGine
 
-imaGine is a browser based air notes and drawing tool by Danish Puri. It helps people turn hand movement, sketches, and written thoughts into a clear digital note that can be saved as a PNG image or a PDF document.
+imaGine is a browser based air notes and drawing tool. It helps people turn hand movement, sketches, and written thoughts into a clear digital note that can be saved as a PNG image or a PDF document.
 
 ## Why imaGine exists
 
