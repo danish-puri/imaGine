@@ -29,7 +29,7 @@ imaGine puts the canvas in the browser. A person can draw with a webcam tracked 
 
 ## Use the app
 
-1. Open `index.html` in a browser
+1. Open `https://danish-puri.github.io/imaGine/` in a browser
 2. Give the note a title
 3. Select the pen, highlighter, or eraser
 4. Draw on the canvas or enter supporting text
