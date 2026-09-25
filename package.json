@@ -2,7 +2,11 @@
   "name": "imagine-air-notes",
   "version": "1.0.0",
   "private": true,
-  "description": "Browser-based air notes and drawing tool",
+  "description": "Draw in the air with your finger using webcam hand tracking, then export to PNG or PDF",
+  "homepage": "https://danish-puri.github.io/imaGine/",
+  "repository": "github:danish-puri/imaGine",
+  "author": "Danish Puri",
+  "license": "MIT",
   "scripts": {
     "test": "playwright test",
     "test:mobile": "playwright test tests/mobile.spec.js --project=mobile-chromium",

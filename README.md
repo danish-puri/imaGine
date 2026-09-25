@@ -1,93 +1,126 @@
 # imaGine
 
-imaGine is a browser based air notes and drawing tool. It helps people turn hand movement, sketches, and written thoughts into a clear digital note that can be saved as a PNG image or a PDF document.
+Draw in the air with your finger, then save the sketch as a PNG or PDF.
 
-## Why imaGine exists
+[![Tests](https://github.com/danish-puri/imaGine/actions/workflows/tests.yml/badge.svg)](https://github.com/danish-puri/imaGine/actions/workflows/tests.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Ideas are often easier to explain by drawing than by typing. A presenter should be able to stay focused on the idea instead of reaching for a pen, paper, or a control panel.
+**[Try the live demo](https://danish-puri.github.io/imaGine/)** · [Read the story behind it](https://danish-puri.github.io/imaGine/about.html)
 
-imaGine puts the canvas in the browser. A person can draw with a webcam tracked fingertip or use the regular mouse and touch controls. A text area is available for longer notes, so a single export can include both the drawing and the written explanation.
+![imaGine in a laptop browser, with a lightbulb sketch on the canvas, the note list on the left, and the drawing tools across the top](docs/screenshot-desktop.png)
 
-## Who it helps
+I built imaGine for the moments when an idea is easier to draw than to type and there's no pen or whiteboard nearby. A webcam follows your index finger, a pinch puts the pen down, and the stroke lands on a canvas in the browser. The same canvas also takes a mouse or a touch screen, so the app still works without a camera.
 
-1. Teachers preparing visual notes
-2. Presenters explaining an idea to a group
-3. Students capturing sketches and study notes
-4. Teams turning a quick discussion into a shareable record
-5. Anyone who wants to create without a physical pen or paper
+## What it does
 
-## What is included
+- Draw with a webcam-tracked fingertip, a mouse, or touch
+- Switch between pen, highlighter, and eraser, and choose the color and brush size
+- Undo and redo through the last 25 versions of the canvas
+- Type a note next to the drawing
+- Keep many notes, search them, and find them again after closing the tab
+- Export the drawing as a PNG, or as an A4 PDF with the title, date, drawing, and note
 
-1. A digital canvas for freehand drawing
-2. Pen, highlighter, and eraser tools
-3. Undo, redo, and clear controls
-4. A text note area for typed context
-5. Webcam tracked fingertip input through Air Draw
-6. Mouse and touch input when the camera is not suitable
-7. PNG export for a clean image of the canvas
-8. PDF export with the title, date, drawing, and text note
+## Air Draw
 
-## Use the app
+1. Select **Air Draw** in the toolbar and allow camera access.
+2. Point with your index finger to move the cursor.
+3. Pinch your thumb and index finger together to draw.
+4. Open the pinch to lift the pen.
 
-1. Open `https://danish-puri.github.io/imaGine/` in a browser
-2. Give the note a title
-3. Select the pen, highlighter, or eraser
-4. Draw on the canvas or enter supporting text
-5. Choose Air Draw if you want to use a webcam tracked fingertip
-6. Select PNG or PDF to save the note
+A small camera preview shows the tracked hand and the frame rate. Turning Air Draw off releases the camera.
 
-Air Draw uses three simple gestures:
+### How it works
 
-1. Extend the index finger to move the on screen cursor
-2. Pinch the index finger and thumb, or hold the gesture, to draw
-3. Release the pinch to lift the virtual pen
+```mermaid
+flowchart LR
+    cam[Webcam frame] --> hands[MediaPipe Hands]
+    hands --> tip[Index fingertip, mirrored and smoothed]
+    tip --> pinch{Pinching?}
+    pinch -- yes --> draw[Midpoint curve on the canvas]
+    pinch -- no --> hover[Cursor moves, pen lifted]
+    draw --> export[PNG or PDF]
+```
 
-## Run locally
+1. [MediaPipe Hands](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/hands.md) looks for one hand in each 320×240 webcam frame and returns 21 landmarks.
+2. The index fingertip (landmark 8) is flipped horizontally, so the cursor moves like a mirror image, and scaled to the canvas.
+3. Raw landmarks jitter from frame to frame, so the cursor follows an exponential moving average, `smooth = smooth + 0.35 * (raw - smooth)`. A larger factor reacts faster, a smaller one is steadier, and 0.35 balances the two.
+4. The pen goes down when the 3D distance between the thumb tip (landmark 4) and the index fingertip drops below 0.07 in MediaPipe's normalized units. It lifts when the distance grows past that.
+5. Each new point joins the stroke with a quadratic curve that runs from midpoint to midpoint and bends through the sampled point. Strokes stay smooth and unbroken even when the hand travels far between frames.
 
-The app is a static web page. Start any local web server from the project folder and open:
+Mouse and touch input skip the first four steps and share the same curve drawing.
 
-    http://localhost:8000/
+## On a phone
 
-The page loads the hand tracking and PDF libraries from public content delivery services. An internet connection is needed when those libraries are not already available in the browser cache.
+On small screens the tools sit in a dock at the bottom, the note list opens from the **Notes** button, and the typed note folds into a small tab until you need it. Export lives in the **⋯** menu.
 
-Camera access usually requires a secure browser context. Localhost is supported by modern browsers. If camera access is unavailable, drawing, typing, export, undo, redo, and clear still work with local input.
+<p align="center">
+  <img src="docs/screenshot-mobile.png" width="260" alt="imaGine on a phone, with the lightbulb sketch and the drawing dock at the bottom">
+</p>
 
-## Run the mobile tests
+## Run it locally
 
-Install the test dependency and Chromium once:
+imaGine is plain HTML, CSS, and JavaScript with no build step, so any static server works.
 
-    npm install
-    npx playwright install chromium
+```bash
+git clone https://github.com/danish-puri/imaGine.git
+cd imaGine
+python3 -m http.server 8000
+```
 
-Run the automated mobile layout and touch-input suite:
+Then open http://localhost:8000. Browsers only allow the camera on secure pages, and `localhost` counts as one. MediaPipe, jsPDF, and the icons load from public CDNs at pinned versions, so the first visit needs an internet connection.
 
-    npm run test:mobile
+## Tests
 
-Use `npm run test:mobile:headed` to watch the tests in a browser window.
+I test the app with Playwright. The suite checks drawing, stroke continuity, undo and redo, saving and reopening notes, PNG export, that Air Draw releases the camera, and that no control slides off screen at phone, tablet, laptop, and desktop widths. GitHub Actions runs it on every push.
+
+```bash
+npm install
+npx playwright install chromium
+npm test               # all tests
+npm run test:mobile    # phone layouts and touch input
+npm run test:desktop   # tablet, laptop, and desktop layouts
+```
+
+The tests block every CDN request, so they don't depend on the network.
+
+## Project structure
+
+```
+index.html              App layout and library scripts
+styles.css              Styles for phone, tablet, and desktop
+app.js                  Drawing engine, hand tracking, notes, and export
+about.html, about.css   The story behind the project
+tests/                  Playwright tests for mobile and desktop
+docs/                   Screenshots for this README
+.github/workflows/      Runs the tests on every push
+```
 
 ## Privacy
 
-Camera frames are processed in the browser and are not uploaded by imaGine. The note stays in the current browser session unless you choose to export it. Review browser camera permissions before presenting, especially on a shared computer.
+Hand tracking runs entirely in the browser. Camera frames never leave the device, and there is no backend. Notes stay in the browser's local storage until you export them, and clearing the site's data deletes them.
 
-## Export details
+## Limitations
 
-PNG export saves the current drawing canvas as an image.
+- Air Draw follows one hand and works best in even light with the whole hand in view.
+- The pinch threshold is a fixed distance in image coordinates. A hand far from the camera can trigger it too easily, and a hand very close has to pinch tighter.
+- Notes live in one browser on one device.
 
-PDF export creates an A4 document with the note title, the creation date, the drawing, and any text entered in the note area. The export uses the browser session content at the moment you select the PDF control.
+## What's next
 
-## Public files
+I want to turn imaGine into a hands-free classroom tool, where a teacher can move through slides, draw on them in the air, and export the marked-up lesson.
 
-The public repository contains only the files needed to run and understand the app:
+## Built with
 
-1. `index.html` contains the interface and library references
-2. `style.css` contains the visual design
-3. `app.js` contains drawing, tracking, history, and export behavior
-4. `README.md` contains product and usage documentation
+- JavaScript, HTML5 Canvas, and CSS, with no framework
+- [MediaPipe Hands](https://github.com/google-ai-edge/mediapipe/blob/master/docs/solutions/hands.md) for hand tracking
+- [jsPDF](https://github.com/parallax/jsPDF) for PDF export
+- [Lucide](https://lucide.dev) for icons
+- [Playwright](https://playwright.dev) for tests
 
-## Product status
+## License
 
-imaGine is an early working MVP. The core drawing, text note, export, and fallback input flows are available. Hand tracking is an experimental input layer and should be tested on the target computer before a live session.
+MIT. See [LICENSE](LICENSE).
 
-## Author
+---
 
-Danish Puri 
+Created by Danish Puri.
