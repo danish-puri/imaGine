@@ -321,16 +321,29 @@ body {
   opacity: 0.82;
 }
 
+.site-copyright a {
+  color: var(--text-secondary);
+  pointer-events: auto;
+}
+
+.site-copyright a:hover {
+  color: var(--accent-gold);
+}
+
 /* Main Toolbar */
+/* The toolbar wraps onto a second row on laptop-width screens instead of
+   pushing the export buttons off the edge */
 .toolbar {
-  height: 60px;
+  min-height: 60px;
   background-color: var(--bg-glass);
   backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-color);
-  padding: 0 20px;
+  padding: 10px 20px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 8px 12px;
   z-index: 10;
 }
 
@@ -338,6 +351,15 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.toolbar-left {
+  margin-right: auto;
+}
+
+.toolbar-right {
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .toolbar-controls {
@@ -382,6 +404,7 @@ body {
   color: var(--text-primary);
   font-weight: 600;
   font-size: 0.88rem;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -551,7 +574,7 @@ body {
 /* Text Overlay (Hybrid Note + Canvas) */
 .text-editor-container {
   position: absolute;
-  bottom: 20px;
+  bottom: 36px;
   right: 20px;
   width: 360px;
   background: var(--bg-glass);
@@ -758,7 +781,7 @@ body {
   }
 
   .toolbar {
-    padding: 0 12px;
+    padding-inline: 12px;
     gap: 8px;
   }
 
@@ -778,6 +801,17 @@ body {
 
   .btn-action {
     padding-inline: 9px;
+  }
+
+  /* On narrow editors the copyright line can wrap to two lines */
+  .site-copyright {
+    left: 20px;
+    text-align: right;
+  }
+
+  .text-editor-container {
+    bottom: 48px;
+    width: min(360px, calc(100% - 40px));
   }
 }
 
@@ -959,6 +993,7 @@ body {
 
   .site-copyright {
     right: 12px;
+    left: auto;
     bottom: calc(74px + env(safe-area-inset-bottom));
     font-size: 0.62rem;
   }
@@ -1193,7 +1228,7 @@ body {
 
   .text-editor-container {
     right: 12px;
-    bottom: calc(76px + env(safe-area-inset-bottom));
+    bottom: calc(92px + env(safe-area-inset-bottom));
     width: auto;
     max-width: calc(100% - 24px);
     padding: 0;
@@ -1262,7 +1297,7 @@ body {
   }
 
   .text-editor-container {
-    bottom: calc(72px + env(safe-area-inset-bottom));
+    bottom: calc(90px + env(safe-area-inset-bottom));
   }
 }
 

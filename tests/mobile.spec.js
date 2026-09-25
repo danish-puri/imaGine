@@ -1,22 +1,5 @@
 const { test, expect } = require('@playwright/test');
-
-async function openApp(page) {
-  // The application is usable without its optional CDN libraries. Blocking
-  // them keeps layout and touch tests fast and independent of the network.
-  await page.route('**/*', async (route) => {
-    const requestUrl = new URL(route.request().url());
-    const isLocal = ['127.0.0.1', 'localhost'].includes(requestUrl.hostname);
-
-    if (isLocal) {
-      await route.continue();
-    } else {
-      await route.abort();
-    }
-  });
-
-  await page.goto('/index.html');
-  await expect(page.locator('#countAll')).toHaveText('1');
-}
+const { openApp, expectNoOverlap } = require('./helpers');
 
 const DIAGONAL_STROKE = [
   [35, 80],
@@ -116,6 +99,10 @@ test.describe('mobile layout', () => {
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(390);
     expect(bounds.width).toBeLessThanOrEqual(366);
   });
+
+  test('keeps the copyright line clear of the text note button', async ({ page }) => {
+    await expectNoOverlap(page, '.site-copyright', '.text-editor-container');
+  });
 });
 
 test.describe('compact mobile layout', () => {
@@ -146,6 +133,10 @@ test.describe('compact mobile layout', () => {
     await page.locator('#btnMobileMore').click();
     await expect(page.locator('#btnExportPDF')).toBeVisible();
     await expect(page.locator('#btnExportPDF')).toHaveAccessibleName('Export PDF');
+  });
+
+  test('keeps the copyright line clear of the text note button', async ({ page }) => {
+    await expectNoOverlap(page, '.site-copyright', '.text-editor-container');
   });
 });
 

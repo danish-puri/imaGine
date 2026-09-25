@@ -6,7 +6,8 @@
   "scripts": {
     "test": "playwright test",
     "test:mobile": "playwright test tests/mobile.spec.js --project=mobile-chromium",
-    "test:mobile:headed": "playwright test tests/mobile.spec.js --project=mobile-chromium --headed"
+    "test:mobile:headed": "playwright test tests/mobile.spec.js --project=mobile-chromium --headed",
+    "test:desktop": "playwright test tests/desktop.spec.js --project=desktop-chromium"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1"
