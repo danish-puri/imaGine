@@ -625,8 +625,9 @@ document.addEventListener('DOMContentLoaded', () => {
     smoothY = null;
     stopDrawing();
 
+    // Release the webcam so the camera light turns off
     if (cameraInstance) {
-      // Pause tracking
+      cameraInstance.stop();
     }
   }
 

@@ -231,3 +231,31 @@ test.describe('mobile interactions', () => {
     expect(download.suggestedFilename()).toBe('Mobile_sketch.png');
   });
 });
+
+test.describe('air draw', () => {
+  test('releases the webcam when Air Draw turns off', async ({ page }) => {
+    // openApp blocks the MediaPipe CDN scripts, so provide stand-ins that
+    // record how the app drives the camera.
+    await page.addInitScript(() => {
+      window.cameraCalls = [];
+      window.Hands = class {
+        setOptions() {}
+        onResults() {}
+        async send() {}
+      };
+      window.Camera = class {
+        async start() { window.cameraCalls.push('start'); }
+        async stop() { window.cameraCalls.push('stop'); }
+      };
+    });
+    await openApp(page);
+
+    const toggle = page.locator('#btnAirDrawToggle');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-label', 'Turn off Air Draw');
+
+    await page.locator('#btnHudClose').click();
+    await expect(toggle).toHaveAttribute('aria-label', 'Turn on Air Draw');
+    expect(await page.evaluate(() => window.cameraCalls)).toEqual(['start', 'stop']);
+  });
+});
