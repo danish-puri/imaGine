@@ -1,4 +1,4 @@
-# imaGine
+<h1 align="center">imaGine</h1>
 
 Draw in the air with your finger, then save the sketch as a PNG or PDF.
 
