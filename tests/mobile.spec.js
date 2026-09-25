@@ -18,16 +18,17 @@ async function openApp(page) {
   await expect(page.locator('#countAll')).toHaveText('1');
 }
 
-async function drawTouchLine(page) {
-  await page.locator('#sketchCanvas').evaluate((canvas) => {
+const DIAGONAL_STROKE = [
+  [35, 80],
+  [70, 105],
+  [110, 125],
+  [155, 150],
+  [205, 165]
+];
+
+async function drawTouchLine(page, points = DIAGONAL_STROKE) {
+  await page.locator('#sketchCanvas').evaluate((canvas, points) => {
     const rect = canvas.getBoundingClientRect();
-    const points = [
-      [35, 80],
-      [70, 105],
-      [110, 125],
-      [155, 150],
-      [205, 165]
-    ];
 
     const dispatchTouch = (type, point, isEnding = false) => {
       const touch = {
@@ -51,7 +52,7 @@ async function drawTouchLine(page) {
     dispatchTouch('touchstart', points[0]);
     points.slice(1).forEach((point) => dispatchTouch('touchmove', point));
     dispatchTouch('touchend', points.at(-1), true);
-  });
+  }, points);
 }
 
 test.describe('mobile layout', () => {
@@ -167,6 +168,22 @@ test.describe('mobile interactions', () => {
 
     expect(drawnCanvas).not.toBe(blankCanvas);
     expect(savedNote.canvasDataUrl).toBe(drawnCanvas);
+  });
+
+  test('draws a continuous stroke when input points are far apart', async ({ page }) => {
+    // Fast strokes and Air Draw frames can land tens of pixels apart
+    await drawTouchLine(page, [[20, 100], [60, 100], [100, 100], [140, 100], [180, 100]]);
+
+    const emptyPixels = await page.locator('#sketchCanvas').evaluate((canvas) => {
+      const row = canvas.getContext('2d').getImageData(20, 100, 161, 1).data;
+      const empty = [];
+      for (let x = 0; x <= 160; x += 2) {
+        if (row[x * 4 + 3] === 0) empty.push(20 + x);
+      }
+      return empty;
+    });
+
+    expect(emptyPixels).toEqual([]);
   });
 
   test('undoes and redoes a touch stroke', async ({ page }) => {

@@ -332,11 +332,15 @@ document.addEventListener('DOMContentLoaded', () => {
   let isMouseDrawing = false;
   let lastX = 0;
   let lastY = 0;
+  let lastMidX = 0;
+  let lastMidY = 0;
 
   function startDrawing(x, y) {
     isMouseDrawing = true;
     lastX = x;
     lastY = y;
+    lastMidX = x;
+    lastMidY = y;
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -349,23 +353,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setContextStyle();
 
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-
-    // Smooth quadratic curve interpolation
+    // Midpoint quadratic interpolation: curve from the previous midpoint to
+    // the new one, bending through the last sampled point, so the segments
+    // join without gaps even when input points are far apart
     const midX = (lastX + x) / 2;
     const midY = (lastY + y) / 2;
+
+    ctx.beginPath();
+    ctx.moveTo(lastMidX, lastMidY);
     ctx.quadraticCurveTo(lastX, lastY, midX, midY);
     ctx.stroke();
 
     lastX = x;
     lastY = y;
+    lastMidX = midX;
+    lastMidY = midY;
   }
 
   function stopDrawing() {
     if (isMouseDrawing || isAirDrawing) {
       isMouseDrawing = false;
-      ctx.closePath();
+
+      // Finish the stroke from the last midpoint to where the input stopped
+      ctx.beginPath();
+      ctx.moveTo(lastMidX, lastMidY);
+      ctx.lineTo(lastX, lastY);
+      ctx.stroke();
+
       saveHistoryState();
       saveCurrentNoteState();
     }
