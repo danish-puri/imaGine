@@ -52,6 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const sketchCanvas = document.getElementById('sketchCanvas');
   const ctx = sketchCanvas.getContext('2d');
+  const storageWarning = document.getElementById('storageWarning');
 
   const btnAirDrawToggle = document.getElementById('btnAirDrawToggle');
   const airDrawLabel = document.getElementById('airDrawLabel');
@@ -182,8 +183,52 @@ document.addEventListener('DOMContentLoaded', () => {
   resizeCanvas();
 
   // --- STORAGE & NOTES MANAGEMENT ---
-  function loadNotesFromStorage() {
-    const saved = localStorage.getItem('imagine_air_notes');
+  // Note text lives in localStorage. Drawings are full PNGs, which would fill
+  // localStorage's ~5 MB within a few notes, so they go to IndexedDB instead,
+  // keyed by note id.
+  const NOTES_KEY = 'imagine_air_notes';
+  const drawingDb = openDrawingDb();
+  const storageFailures = new Set();
+
+  function openDrawingDb() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('imagine_air_notes', 1);
+      request.onupgradeneeded = () => request.result.createObjectStore('drawings');
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async function drawingRequest(mode, makeRequest) {
+    const db = await drawingDb;
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('drawings', mode);
+      const request = makeRequest(tx.objectStore('drawings'));
+      tx.oncomplete = () => resolve(request.result);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
+  }
+
+  const readDrawing = (id) => drawingRequest('readonly', store => store.get(id));
+  const writeDrawing = (id, dataUrl) => drawingRequest('readwrite', store => store.put(dataUrl, id));
+  const deleteDrawing = (id) => drawingRequest('readwrite', store => store.delete(id));
+
+  // Saving used to fail silently once storage filled up. Tell the user
+  // instead, and clear the warning once that kind of save works again.
+  function reportStorage(kind, error) {
+    if (error) {
+      console.error(`Could not save ${kind}:`, error);
+      storageFailures.add(kind);
+    } else {
+      storageFailures.delete(kind);
+    }
+    storageWarning.textContent = "Browser storage is full or unavailable, so your latest changes aren't saved. Export this note as PNG or PDF to keep it.";
+    storageWarning.hidden = storageFailures.size === 0;
+  }
+
+  async function loadNotesFromStorage() {
+    const saved = localStorage.getItem(NOTES_KEY);
     if (saved) {
       try {
         notes = JSON.parse(saved);
@@ -192,13 +237,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    await migrateInlineDrawings();
+
     if (notes.length === 0) {
       // Create initial sample note
       const sampleNote = {
         id: 'note_' + Date.now(),
         title: 'Welcome to Air Notes ✨',
         contentText: 'Draw in thin air using your index finger! Click "Air Draw" to enable webcam hand tracking.',
-        canvasDataUrl: null,
+        hasDrawing: false,
         folder: 'air',
         updatedAt: new Date().toISOString()
       };
@@ -212,8 +259,32 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFolderCounts();
   }
 
+  // Older versions stored each drawing inline as canvasDataUrl. Move those to
+  // IndexedDB, and only drop the inline copy once the move has succeeded.
+  async function migrateInlineDrawings() {
+    const inline = notes.filter(note => 'canvasDataUrl' in note);
+    if (inline.length === 0) return;
+
+    for (const note of inline) {
+      try {
+        if (note.canvasDataUrl) await writeDrawing(note.id, note.canvasDataUrl);
+      } catch (e) {
+        console.error('Could not move drawings to IndexedDB:', e);
+        break;
+      }
+      note.hasDrawing = Boolean(note.canvasDataUrl);
+      delete note.canvasDataUrl;
+    }
+    saveNotesToStorage();
+  }
+
   function saveNotesToStorage() {
-    localStorage.setItem('imagine_air_notes', JSON.stringify(notes));
+    try {
+      localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+      reportStorage('notes', null);
+    } catch (e) {
+      reportStorage('notes', e);
+    }
     updateFolderCounts();
   }
 
@@ -246,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="note-card-meta">
           <span>${dateStr}</span>
           <span>•</span>
-          <span>${note.canvasDataUrl ? '🎨 Air Sketch' : '📝 Text'}</span>
+          <span>${note.hasDrawing || note.canvasDataUrl ? '🎨 Air Sketch' : '📝 Text'}</span>
         </div>
         <div class="note-card-preview">${escapeHtml(note.contentText || 'No additional text')}</div>
       `;
@@ -263,28 +334,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function loadNote(id) {
+  let isNoteLoading = false;
+  let loadToken = 0;
+
+  async function loadNote(id) {
     const note = notes.find(n => n.id === id);
     if (!note) return;
+    const token = ++loadToken;
 
     noteTitleInput.value = note.title || '';
     textEditor.value = note.contentText || '';
 
-    // Clear canvas
+    // Every note starts with its own undo history. Keeping the old one let
+    // Undo paint the previous note's drawing into this note and save it.
+    resetHistory();
     ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
 
-    // Restore canvas image if exists
-    if (note.canvasDataUrl) {
-      const img = new Image();
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0);
-        saveHistoryState();
-      };
-      img.src = note.canvasDataUrl;
+    if (note.hasDrawing || note.canvasDataUrl) {
+      // Drawing is paused until the saved image is back on the canvas, so a
+      // stroke made in the meantime can't overwrite it
+      isNoteLoading = true;
+      let img = null;
+      try {
+        const dataUrl = note.canvasDataUrl || await readDrawing(id);
+        if (dataUrl) img = await loadImage(dataUrl);
+      } catch (e) {
+        console.error('Could not load drawing:', e);
+      }
+
+      // Another note was opened while this one was loading
+      if (token !== loadToken) return;
+      isNoteLoading = false;
+      if (img) ctx.drawImage(img, 0, 0);
     } else {
-      resetHistory();
-      saveHistoryState();
+      isNoteLoading = false;
     }
+
+    saveHistoryState();
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
   }
 
   function saveCurrentNoteState() {
@@ -294,11 +389,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     note.title = noteTitleInput.value.trim() || 'Untitled Note';
     note.contentText = textEditor.value;
-    note.canvasDataUrl = sketchCanvas.toDataURL('image/png');
     note.updatedAt = new Date().toISOString();
 
     saveNotesToStorage();
     renderNotesList(searchInput.value);
+  }
+
+  // Runs whenever the canvas changes (a stroke, Clear, Undo, Redo), not on
+  // every keystroke, since encoding the canvas as a PNG is the costly part
+  function saveCurrentDrawing() {
+    const note = notes.find(n => n.id === currentNoteId);
+    if (!note) return;
+
+    const isBlank = isCanvasBlank();
+    note.hasDrawing = !isBlank;
+    saveCurrentNoteState();
+
+    const save = isBlank
+      ? deleteDrawing(note.id)
+      : writeDrawing(note.id, sketchCanvas.toDataURL('image/png'));
+
+    save.then(() => {
+      reportStorage('drawing', null);
+      // A copy left over from before the IndexedDB move is now out of date
+      if ('canvasDataUrl' in note) {
+        delete note.canvasDataUrl;
+        saveNotesToStorage();
+      }
+    }, (e) => reportStorage('drawing', e));
+  }
+
+  function isCanvasBlank() {
+    if (sketchCanvas.width === 0 || sketchCanvas.height === 0) return true;
+    const { data } = ctx.getImageData(0, 0, sketchCanvas.width, sketchCanvas.height);
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] !== 0) return false;
+    }
+    return true;
   }
 
   btnNewNote.addEventListener('click', () => {
@@ -308,7 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
       id: 'note_' + Date.now(),
       title: 'New Air Sketch',
       contentText: '',
-      canvasDataUrl: null,
+      hasDrawing: false,
       folder: 'air',
       updatedAt: new Date().toISOString()
     };
@@ -336,6 +463,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastMidY = 0;
 
   function startDrawing(x, y) {
+    if (isNoteLoading) return;
     isMouseDrawing = true;
     lastX = x;
     lastY = y;
@@ -349,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function drawStroke(x, y) {
-    if (!isMouseDrawing && !isAirDrawing) return;
+    if (isNoteLoading || (!isMouseDrawing && !isAirDrawing)) return;
 
     setContextStyle();
 
@@ -381,7 +509,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ctx.stroke();
 
       saveHistoryState();
-      saveCurrentNoteState();
+      saveCurrentDrawing();
     }
   }
 
@@ -391,6 +519,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (activeTool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
+      // Full strength, or erasing after the highlighter only fades lines
+      ctx.globalAlpha = 1.0;
       ctx.lineWidth = activeSize * 4;
     } else if (activeTool === 'highlighter') {
       ctx.globalCompositeOperation = 'source-over';
@@ -458,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnClearCanvas.addEventListener('click', () => {
     ctx.clearRect(0, 0, sketchCanvas.width, sketchCanvas.height);
     saveHistoryState();
-    saveCurrentNoteState();
+    saveCurrentDrawing();
   });
 
   // --- UNDO / REDO HISTORY ---
@@ -481,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (historyStep > 0) {
       historyStep--;
       ctx.putImageData(historyStack[historyStep], 0, 0);
-      saveCurrentNoteState();
+      saveCurrentDrawing();
     }
   });
 
@@ -489,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (historyStep < historyStack.length - 1) {
       historyStep++;
       ctx.putImageData(historyStack[historyStep], 0, 0);
-      saveCurrentNoteState();
+      saveCurrentDrawing();
     }
   });
 

@@ -71,7 +71,7 @@ Then open http://localhost:8000. Browsers only allow the camera on secure pages,
 
 ## Tests
 
-I test the app with Playwright. The suite checks drawing, stroke continuity, undo and redo, saving and reopening notes, PNG export, that Air Draw releases the camera, and that no control slides off screen at phone, tablet, laptop, and desktop widths. GitHub Actions runs it on every push.
+I test the app with Playwright. The suite checks drawing, stroke continuity, undo and redo (including after switching notes), the eraser after the highlighter, saving and reopening notes, the warning when storage is full, PNG export, that Air Draw releases the camera, and that no control slides off screen at phone, tablet, laptop, and desktop widths. GitHub Actions runs it on every push.
 
 ```bash
 npm install
@@ -97,7 +97,7 @@ docs/                   Screenshots for this README
 
 ## Privacy
 
-Hand tracking runs entirely in the browser. Camera frames never leave the device, and there is no backend. Notes stay in the browser's local storage until you export them, and clearing the site's data deletes them.
+Hand tracking runs entirely in the browser. Camera frames never leave the device, and there is no backend. Notes stay in the browser until you export them. Text goes in local storage and drawings go in IndexedDB, which holds far more. If a save ever fails, the app says so. Clearing the site's data deletes everything.
 
 ## Limitations
 

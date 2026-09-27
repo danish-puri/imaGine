@@ -552,6 +552,25 @@ body {
   background-color: #121216;
 }
 
+.storage-warning {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  z-index: 15;
+  padding: 10px 14px;
+  background: rgba(18, 18, 24, 0.92);
+  border: 1px solid var(--accent-red);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.storage-warning[hidden] {
+  display: none;
+}
+
 /* Canvas Container */
 .canvas-wrapper {
   position: absolute;
